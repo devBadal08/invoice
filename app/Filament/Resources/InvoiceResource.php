@@ -18,7 +18,7 @@ class InvoiceResource extends Resource
 {
     protected static ?string $model = Invoices::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static ?string $navigationLabel = 'Invoices';
     protected static ?string $navigationGroup = 'Invoices Management';
     protected static ?int $navigationSort = 4;
@@ -218,28 +218,30 @@ class InvoiceResource extends Resource
     public static function calculateGrandTotal($set, $get): void
     {
         $subtotal = floatval($get('subtotal') ?: 0);
-        $advance = floatval($get('advancePayment') ?: 0);
-
         $gstType = $get('gst_type');
 
-        if ($gstType === 'no_gst') {
-            $total = $subtotal - $advance;
-        } elseif ($gstType === 'cgst_sgst') {
-            $cgstRate = $get('gst_rate.cgst') ?? 0;
-            $sgstRate = $get('gst_rate.sgst') ?? 0;
+        $cgst = 0;
+        $sgst = 0;
+        $igst = 0;
 
-            $cgst = ($subtotal * $cgstRate) / 100;
-            $sgst = ($subtotal * $sgstRate) / 100;
-
-            $total = $subtotal + $cgst + $sgst - $advance;
-        } else { // igst
-            $igstRate = $get('gst_rate.igst') ?? 0;
-            $igst = ($subtotal * $igstRate) / 100;
-
-            $total = $subtotal + $igst - $advance;
+        if ($gstType === 'cgst_sgst') {
+            $cgst = $subtotal * floatval($get('gst_rate.cgst') ?: 0) / 100;
+            $sgst = $subtotal * floatval($get('gst_rate.sgst') ?: 0) / 100;
         }
 
-        $set('amount', round($total, 2));
+        if ($gstType === 'igst') {
+            $igst = $subtotal * floatval($get('gst_rate.igst') ?: 0) / 100;
+        }
+
+        $grandTotal = $subtotal + $cgst + $sgst + $igst;
+
+        $advance = floatval($get('advancePayment') ?: 0);
+        $remaining = $grandTotal - $advance;
+
+        // ✅ Store correct values
+        $set('amount', round($grandTotal, 2));
+        $set('remaining_amount', round($remaining, 2));
+        $set('total_paid', round($advance, 2));
     }
 
     public static function table(Table $table): Table
@@ -254,7 +256,13 @@ class InvoiceResource extends Resource
                 //
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('Download pdf')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success')
+                    ->url(fn (Invoices $record) => route('invoice.pdf', $record))
+                    ->openUrlInNewTab(),
             ])
             ->defaultSort('id','desc')
             ->bulkActions([

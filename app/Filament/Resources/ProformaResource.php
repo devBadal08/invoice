@@ -18,7 +18,7 @@ class ProformaResource extends Resource
 {
     protected static ?string $model = ProformaInvoices::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static ?string $navigationLabel = 'Proforma Invoices';
     protected static ?string $navigationGroup = 'Invoices Management';
     protected static ?int $navigationSort = 2;
@@ -205,27 +205,28 @@ class ProformaResource extends Resource
     public static function calculateGrandTotal($set, $get): void
     {
         $subtotal = floatval($get('subtotal') ?: 0);
-        $advance = floatval($get('advancePayment') ?: 0);
-
         $gstType = $get('gst_type');
 
         if ($gstType === 'no_gst') {
-            $total = $subtotal - $advance;
-        } elseif ($gstType === 'cgst_sgst') {
+            $total = $subtotal;
+        }
+        elseif ($gstType === 'cgst_sgst') {
             $cgstRate = $get('gst_rate.cgst') ?? 0;
             $sgstRate = $get('gst_rate.sgst') ?? 0;
 
             $cgst = ($subtotal * $cgstRate) / 100;
             $sgst = ($subtotal * $sgstRate) / 100;
 
-            $total = $subtotal + $cgst + $sgst - $advance;
-        } else { // igst
+            $total = $subtotal + $cgst + $sgst;
+        }
+        else { // igst
             $igstRate = $get('gst_rate.igst') ?? 0;
             $igst = ($subtotal * $igstRate) / 100;
 
-            $total = $subtotal + $igst - $advance;
+            $total = $subtotal + $igst;
         }
 
+        // IMPORTANT: amount = GRAND TOTAL (NO advance subtraction)
         $set('amount', round($total, 2));
     }
 
@@ -243,11 +244,11 @@ class ProformaResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
-                // Tables\Actions\Action::make('invoices')
-                //     ->label('Download PDF')
-                //     ->icon('heroicon-o-arrow-down-tray')
-                //     ->url(fn ($record) => route('proforma.download', $record->id))
-                //     ->openUrlInNewTab(),
+                Tables\Actions\Action::make('invoices')
+                    ->label('Download PDF')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->url(fn ($record) => route('proforma.download', $record->id))
+                    ->openUrlInNewTab(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

@@ -18,7 +18,7 @@ class PaymentReceiptResource extends Resource
 {
     protected static ?string $model = PaymentReceipt::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';
     protected static ?string $navigationLabel = 'Payment Receipts';
     protected static ?string $navigationGroup = 'Invoices Management';
     protected static ?int $navigationSort = 3;
@@ -202,7 +202,13 @@ class PaymentReceiptResource extends Resource
                 //
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('Payment Receipt')
+                    ->icon('heroicon-o-receipt-refund')
+                    ->color('success')
+                    ->url(fn (PaymentReceipt $record) => route('payment.receipt', $record))
+                    ->openUrlInNewTab(),
             ])
             ->defaultSort('id','desc')
             ->bulkActions([
