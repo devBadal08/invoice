@@ -41,6 +41,11 @@ class InvoiceResource extends Resource
                     ->required()
                     ->default(now()),
 
+                Forms\Components\TextInput::make('job_site')
+                    ->label('Job Site')
+                    ->placeholder('Enter job site / work location')
+                    ->columnSpanFull(),
+
                 Forms\Components\Select::make('company_id')
                     ->label('Company')
                     ->relationship('company', 'name')
@@ -133,26 +138,53 @@ class InvoiceResource extends Resource
                     ->label('Invoice Items')
                     ->required()
                     ->schema([
-                        Forms\Components\TextInput::make('description'),
+                        Forms\Components\TextInput::make('description')
+                            ->required()
+                            ->columnSpanFull(),
 
-                        Forms\Components\TextInput::make('qty')
-                            ->numeric()
-                            ->default(1)
-                            ->reactive(),
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\TextInput::make('quantity')
+                                    ->label('Total')
+                                    ->numeric()
+                                    ->default(1)
+                                    ->required()
+                                    ->reactive()
+                                    ->afterStateUpdated(fn ($set, $get) =>
+                                        self::calculateSubTotal($set, $get)
+                                    ),
+
+                                Forms\Components\Select::make('unit')
+                                    ->label('Hours / Days')
+                                    ->options([
+                                        'hour' => 'Hours',
+                                        'day'  => 'Days',
+                                    ])
+                                    ->default('day')
+                                    ->required(),
+                            ]),
 
                         Forms\Components\TextInput::make('rate')
+                            ->label('Rate')
                             ->numeric()
-                            ->reactive(),
+                            ->required()
+                            ->reactive()
+                            ->afterStateUpdated(fn ($set, $get) =>
+                                self::calculateSubTotal($set, $get)
+                            ),
                     ])
                     ->reactive()
-                    ->afterStateUpdated(fn ($set, $get) => self::calculateSubTotal($set, $get))
-                    ->columns(3)
+                    ->afterStateUpdated(fn ($set, $get) =>
+                        self::calculateSubTotal($set, $get)
+                    )
                     ->columnSpanFull(),
 
                 /* ========== SUBTOTAL & TOTAL AMOUNT ========== */
                 Forms\Components\TextInput::make('subtotal')
                     ->label('Subtotal')
+                    ->default(0)
                     ->disabled()
+                    ->reactive()
                     ->dehydrated()
                     ->columnSpanFull(),
 
@@ -168,8 +200,10 @@ class InvoiceResource extends Resource
                 /* ========== TOTAL AMOUNT ========== */
                 Forms\Components\TextInput::make('amount')
                     ->label('Amount')
+                    ->default(0)
                     ->numeric()
                     ->disabled()
+                    ->reactive()
                     ->dehydrated()
                     ->columnSpanFull()
                     ->required(),
@@ -205,7 +239,7 @@ class InvoiceResource extends Resource
         $items = $get('items') ?? [];
 
         $subtotal = collect($items)->sum(function ($item) {
-            return ($item['qty'] ?? 0) * ($item['rate'] ?? 0);
+            return ($item['quantity'] ?? 0) * ($item['rate'] ?? 0);
         });
 
         // save into subtotal (NOT amount)

@@ -11,6 +11,7 @@ class Invoices extends Model
         'company_id',
         'invoice_no',
         'invoice_date',
+        'job_site',
         'customer_name',
         'amount',
         'gst_type',
@@ -70,7 +71,7 @@ class Invoices extends Model
             $items = $invoice->items ?? [];
 
             $subtotal = collect($items)->sum(function ($item) {
-                return ($item['qty'] ?? 0) * ($item['rate'] ?? 0);
+                return ($item['quantity'] ?? 0) * ($item['rate'] ?? 0);
             });
 
             $advance = $invoice->advancePayment ?? 0;
