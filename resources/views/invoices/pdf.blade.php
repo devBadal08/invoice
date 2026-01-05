@@ -5,7 +5,13 @@
         ->values();
 
     // 2. Calculate subtotal ONLY from valid items
-    $subtotal = $items->sum(fn ($item) => ($item['quantity'] ?? 0) * ($item['rate'] ?? 0));
+    $subtotal = $items->sum(function ($item) {
+        $qty = $item['quantity'] ?? null;
+        if (!$qty) {
+            $qty = 1;
+        }
+        return $qty * ($item['rate'] ?? 0);
+    });
 
     $cgst = $sgst = $igst = 0;
 
@@ -79,6 +85,15 @@ td, th {
     border-bottom: none;
 }
 
+.developed-by {
+    position: fixed;
+    bottom: 10px;
+    right: 15px;
+    font-size: 9px;
+    color: #999;
+    font-style: italic;
+}
+
 </style>
 </head>
 
@@ -145,13 +160,23 @@ td, th {
 
     <!-- ITEMS -->
     @foreach($items as $item)
-        @php $line = ($item['quantity'] ?? 0) * ($item['rate'] ?? 0); @endphp
+        @php
+            $qty = $item['quantity'] ?? null;
+            if (!$qty) {
+                $qty = 1; // flat rate
+            }
+            $line = $qty * ($item['rate'] ?? 0);
+        @endphp
         <tr>
             <td class="center">{{ \Carbon\Carbon::parse($invoice->invoice_date)->format('d-m-Y') }}</td>
             <td>{{ $item['description'] }}</td>
             <td class="center">{{ $invoice->bank_details['hsncode'] ?? '' }}</td>
             <td class="center">
-                {{ $item['quantity'] }} {{ ucfirst($item['unit'] ?? '') }}
+                @if(!empty($item['quantity']) && !empty($item['unit']))
+                    {{ $item['quantity'] }} {{ ucfirst($item['unit']) }}
+                @else
+                    {{-- leave empty --}}
+                @endif
             </td>
             <td class="right">{{ number_format($item['rate'],2) }}</td>
             <td class="right">{{ number_format($line,2) }}</td>
@@ -267,6 +292,10 @@ td, th {
     </tr>
 
 </table>
+
+<div class="developed-by">
+    Developed by Techstrota
+</div>
 
 </body>
 </html>

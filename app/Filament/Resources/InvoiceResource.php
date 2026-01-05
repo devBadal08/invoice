@@ -49,7 +49,6 @@ class InvoiceResource extends Resource
                 Forms\Components\Select::make('company_id')
                     ->label('Company')
                     ->relationship('company', 'name')
-                    ->required()
                     ->reactive()
                     ->afterStateUpdated(function ($state, $set) {
 
@@ -75,9 +74,9 @@ class InvoiceResource extends Resource
                 /* ========== CUSTOMER DETAILS (JSON) ========== */
                 Forms\Components\Fieldset::make('Customer Details')
                     ->schema([
-                        Forms\Components\TextInput::make('customer.name')->required()->disabled()->dehydrated(),
-                        Forms\Components\TextInput::make('customer.gst_no')->label('GST No')->disabled()->dehydrated(),
-                        Forms\Components\Textarea::make('customer.address')->required()->disabled()->rows(3)->dehydrated(),
+                        Forms\Components\TextInput::make('customer.name')->required(),
+                        Forms\Components\TextInput::make('customer.gst_no')->label('GST No'),
+                        Forms\Components\Textarea::make('customer.address')->required(),
                     ]),
 
                 /* ========== BANK DETAILS (JSON) ========== */
@@ -147,8 +146,7 @@ class InvoiceResource extends Resource
                                 Forms\Components\TextInput::make('quantity')
                                     ->label('Total')
                                     ->numeric()
-                                    ->default(1)
-                                    ->required()
+                                    ->nullable()
                                     ->reactive()
                                     ->afterStateUpdated(fn ($set, $get) =>
                                         self::calculateSubTotal($set, $get)
@@ -160,8 +158,7 @@ class InvoiceResource extends Resource
                                         'hour' => 'Hours',
                                         'day'  => 'Days',
                                     ])
-                                    ->default('day')
-                                    ->required(),
+                                    ->default('day'),
                             ]),
 
                         Forms\Components\TextInput::make('rate')
@@ -208,15 +205,6 @@ class InvoiceResource extends Resource
                     ->columnSpanFull()
                     ->required(),
 
-                Forms\Components\TextInput::make('total_paid')
-                    ->label('Total Paid')
-                    ->disabled()
-                    ->reactive(),
-
-                Forms\Components\TextInput::make('remaining_amount')
-                    ->label('Final Due Amount')
-                    ->disabled(),
-
                 /* ========== TERMS & CONDITIONS ========== */
                 Forms\Components\Textarea::make('terms')
                     ->label('Terms & Conditions')
@@ -239,10 +227,16 @@ class InvoiceResource extends Resource
         $items = $get('items') ?? [];
 
         $subtotal = collect($items)->sum(function ($item) {
-            return ($item['quantity'] ?? 0) * ($item['rate'] ?? 0);
+            $qty  = $item['quantity'];
+
+            // 🔑 If quantity is empty → assume flat rate (qty = 1)
+            if ($qty === null || $qty === '' || $qty == 0) {
+                $qty = 1;
+            }
+
+            return $qty * ($item['rate'] ?? 0);
         });
 
-        // save into subtotal (NOT amount)
         $set('subtotal', round($subtotal, 2));
 
         self::calculateGrandTotal($set, $get);

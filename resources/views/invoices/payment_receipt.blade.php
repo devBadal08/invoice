@@ -1,147 +1,140 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>Receipt {{ $receipt->receipt_no ?? '' }}</title>
+<meta charset="UTF-8">
 
-    <style>
-        @page { margin: 10px 10px 20px 10px; }
+<style>
+@page { margin: 20px; }
 
-        body {
-            font-family: DejaVu Sans, Arial, sans-serif;
-            font-size: 14px;
-        }
+body {
+    font-family: DejaVu Sans, Arial, sans-serif;
+    font-size: 12px;
+}
 
-        .wrap { padding: 5px 12px; }
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
 
-        .company-name {
-            font-size: 18px;
-            font-weight: bold;
-            color: #f59e0b;
-        }
+td, th {
+    border: 1px solid #9B0000;
+    padding: 6px;
+    vertical-align: top;
+}
 
-        table {
-            width:100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            margin-top: 10px;
-            border-radius: 18px;
-            border: 1px solid #e6efff;
-        }
+.center { text-align: center; }
+.right { text-align: right; }
+.bold { font-weight: bold; }
 
-        th { background: #f2f7ff; padding: 10px; }
-        td { padding: 10px; }
+.heading {
+    font-size: 25px;
+    font-weight: bold;
+    color: #9B0000;
+}
 
-        .center { text-align:center; }
-        .right { text-align:right; }
+.subheading {
+    font-size: 20px;
+    font-weight: bold;
+    color: #9B0000;
+}
 
-        .footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #f59e0b;
-            padding: 10px;
-            text-align: center;
-            font-weight: bold;
-        }
-    </style>
+.subheading2 {
+    font-size: 15px;
+    color: #9B0000;
+}
+
+.red-text { color: #9B0000; }
+</style>
 </head>
 
 <body>
 
-<div class="wrap">
+<table>
 
-    <table width="100%">
-        <tr>
-            <td width="30%">
-                <img src="{{ public_path('images/logo.png') }}" height="40">
-            </td>
+    <!-- HEADER -->
+    <tr>
+        <td colspan="4" class="center bold">
+            <div class="heading">SIDDHI VINAYAK TRANSPORT</div>
+            <div class="subheading">FORKLIFT & HYDRA CRANE</div>
+            <div class="subheading2">PAYMENT RECEIPT</div>
+        </td>
+    </tr>
 
-            <td width="40%" class="center">
-                <h2 style="color:#ff8c00">PAYMENT RECEIPT</h2>
-            </td>
+    <tr>
+        <td colspan="4" class="center red-text bold">
+            Regd Off+B1:K6ice : C1/20 Nandesari G.I.D.C. Colony, Nandesari, Vadodara  
+            (M) 97233 96060, 91738 76050
+        </td>
+    </tr>
 
-            <td width="30%" class="right">
-                <div class="company-name">TECHSTROTA</div>
-                156, 1st Floor, C Tower, K10 Atlantis, Sarabhai Campus, Vadodara - 390007
-            </td>
-        </tr>
-    </table>
+    <!-- CUSTOMER + RECEIPT INFO -->
+    <tr>
+        <td colspan="2">
+            <b>Received From:</b><br>
+            {{ $receipt->customer['name'] ?? '' }}<br>
+            {{ $receipt->customer['address'] ?? '' }}
+        </td>
 
-    <br>
+        <td class="bold red-text">Receipt No</td>
+        <td>{{ $receipt->receipt_no }}</td>
+    </tr>
 
-    <table>
-        <tr>
-            <td>
-                <strong>Customer:</strong> {{ $receipt->customer['name'] ?? '' }} <br>
-                <strong>Address:</strong> {{ $receipt->customer['address'] ?? '' }}
-            </td>
+    <tr>
+        <td colspan="2" class="bold red-text">
+            GST No: {{ $receipt->customer['gst_no'] ?? '' }}
+        </td>
 
-            <td class="right">
-                <strong>Receipt No:</strong> {{ $payment['receipt_no'] ?? $receipt->receipt_no ?? 'N/A' }} <br>
-                <strong>Date:</strong> {{ isset($payment['date']) ? \Carbon\Carbon::parse($payment['date'])->format('d-m-Y') : now()->format('d-m-Y') }}
-            </td>
-        </tr>
-    </table>
+        <td class="bold red-text">Date</td>
+        <td>{{ \Carbon\Carbon::parse($receipt->date)->format('d-m-Y') }}</td>
+    </tr>
 
-    <br>
+    <!-- PAYMENT TABLE -->
+    <tr class="bold center">
+        <td>Description</td>
+        <td>Payment Mode</td>
+        <td colspan="2">Amount</td>
+    </tr>
 
-    <table>
-        <thead>
-        <tr>
-            <th>Description</th>
-            <th class="right">Amount</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr>
-            <td>Payment Received ({{ $payment['method'] ?? 'N/A' }})</td>
-            <td class="right">₹ {{ number_format($payment['amount'] ?? 0, 2) }}</td>
-        </tr>
-        </tbody>
-    </table>
+    <tr>
+        <td>
+            Payment received against Invoice  
+            <b>{{ $receipt->invoice_no ?? '' }}</b>
+        </td>
+        <td class="center">
+            {{ ucfirst($receipt->payment_method ?? 'Cash') }}
+        </td>
+        <td colspan="2" class="right">
+            {{ number_format($receipt->amount, 2) }}
+        </td>
+    </tr>
 
-    <br>
+    <!-- TOTAL -->
+    <tr>
+        <td colspan="2" class="bold red-text">
+            Amount in Words:
+            {{ strtoupper(\NumberFormatter::create('en_IN', \NumberFormatter::SPELLOUT)->format($receipt->amount)) }}
+            ONLY
+        </td>
+        <td class="right bold red-text">TOTAL</td>
+        <td class="right bold">{{ number_format($receipt->amount, 2) }}</td>
+    </tr>
 
-    <br><br>
-    <br><br>
-    <br><br>
-    <br><br>
-    <br><br>
-    <br><br>
-    <br><br>
-    <br><br>
-    <br><br>
-    <br><br>
-    <!-- SIGNATURE BOX (BELOW + RIGHT SIDE) -->
-    <table style="width:100%; border:none;">
-        <tr>
-            <td style="border:none; padding:0;">
-                <div style="
-                    width: 40%;
-                    margin-left: auto;
-                    border: 2px dashed #ff9f00;
-                    border-radius: 16px;
-                    padding: 25px 10px;
-                    background: #fffaf3;
-                    text-align: center;
-                    min-height: 110px;
-                ">
-                    For,
-                    <strong style="color:#1d4ed8; font-size:18px;">TECHSTROTA</strong>
-                    <br><br><br>
-                    Authorized Signature
-                </div>
-            </td>
-        </tr>
-    </table>
+    <!-- BANK + SIGN -->
+    <tr>
+        <td colspan="2" class="red-text">
+            <b>Bank:</b> Bank of Baroda<br>
+            <b>Branch:</b> Nandesari<br>
+            <b>Ac No:</b> 2170200001129<br>
+            <b>IFSC:</b> BARBOINDNAN
+        </td>
 
-</div>
+        <td colspan="2" class="center red-text">
+            For <b>Siddhi Vinayak Transport</b><br><br><br>
+            Authorised Signatory
+        </td>
+    </tr>
 
-<div class="footer">
-    Email: info@techstrota.com | Call Us: +91 90334 76660 | techstrota.com
-</div>
+</table>
 
 </body>
 </html>
