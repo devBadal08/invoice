@@ -144,7 +144,7 @@ class InvoiceResource extends Resource
                         Forms\Components\Grid::make(2)
                             ->schema([
                                 Forms\Components\TextInput::make('quantity')
-                                    ->label('Total')
+                                    ->label('Qty')
                                     ->numeric()
                                     ->nullable()
                                     ->reactive()
@@ -156,6 +156,7 @@ class InvoiceResource extends Resource
                                     ->label('Hours / Days')
                                     ->options([
                                         'hour' => 'Hours',
+                                        'month' => 'Months',
                                         'day'  => 'Days',
                                     ])
                                     ->default('day'),

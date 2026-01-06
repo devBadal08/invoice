@@ -274,22 +274,33 @@ td, th {
     </tr>
 
     <tr>
-        <td colspan="4" class="red-text"><b>Bank:</b> Bank of Baroda</td>
-        <td colspan="2" class="red-text" rowspan="3"></td>
-    </tr>
+    <td colspan="4" class="red-text"><b>Bank:</b> Bank of Baroda</td>
 
-    <tr>
-        <td colspan="4" class="red-text"><b>Branch:</b> Nandesari</td>
-    </tr>
+    <!-- SIGNATURE BLOCK (spans 4 rows) -->
+    <td colspan="2"
+        rowspan="3"
+        class="center red-text"
+        style="vertical-align:middle;">
+            <img
+                src="{{ public_path('images/sign.jpeg') }}"
+                style="height:40px; max-width:160px;"
+            >
+    </td>
+</tr>
 
-    <tr>
-        <td colspan="4" class="red-text"><b>Ac No:</b> 2170200001129</td>
-    </tr>
+<tr>
+    <td colspan="4" class="red-text"><b>Branch:</b> Nandesari</td>
+</tr>
 
-    <tr>
-        <td colspan="4" class="red-text"><b>IFSCCode:</b> BARBOINDNAN</td>
-        <td colspan="2" class="center red-text">Authorised Signatory</td>
-    </tr>
+<tr>
+    <td colspan="4" class="red-text"><b>Ac No:</b> 02170200001129</td>
+</tr>
+
+<tr>
+    <td colspan="4" class="red-text"><b>IFSCCode:</b> BARBOINDNAN</td>
+    <td colspan="2" class="center red-text">Authorised Signatory</td>
+</tr>
+
 
 </table>
 
